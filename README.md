@@ -1,4 +1,4 @@
-# User Manager
+# Users Manager
 
 User manager is a .Net library which provides a backend framework for users management. 
 The library uses EntityFrameworkCore and Google authentication.
