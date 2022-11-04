@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Configurations>Debug;Release;Test</Configurations>
+        <PackageId>CPIT.$(AssemblyName)</PackageId>
+        <Authors>CPIT</Authors>
+        <Description>Manage users .Net library</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Version>2.0.0</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="EmailTemplates\**" />
+      <EmbeddedResource Remove="EmailTemplates\**" />
+      <None Remove="EmailTemplates\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
+      <PackageReference Include="Google.Apis.Drive.v3" Version="1.57.0.2601" />
+      <PackageReference Include="Google.Cloud.SecretManager.V1" Version="2.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.4" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\README.md">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+    </ItemGroup>
+
+</Project>
