@@ -27,18 +27,18 @@ public class JwtHandler
         var secretManager = new SecretManagerConfigurationProvider();
 
         var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ??
-                                          secretManager.GetSecret("PMX_JWT_SECRET") ??
+                                          secretManager.GetSecret("JWT_SECRET") ??
                                          _jwtSettings.GetSection("securityKey").Value);
         var secret = new SymmetricSecurityKey(key);
         return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
     }
 
-    public List<Claim> GetClaims(ApplicationUser user, string? impersonator = null, 
+    public List<Claim> GetClaims(string userEmail, string[] roles, string? impersonator = null, 
         ClaimPayload[]? claimsPayload = null)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, user.Email)
+            new(ClaimTypes.Name, userEmail)
         };
 
         if (impersonator != null)
@@ -58,7 +58,7 @@ public class JwtHandler
         }
         
         // Add roles as multiple claims
-        foreach (var role in user.Roles) claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
+        foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
 
         return claims;
     }
@@ -96,11 +96,21 @@ public class JwtHandler
         }
     }
 
+    public async Task<string> GenerateToken(string userEmail, string[] roles, string? impersonator = null, 
+        ClaimPayload[]? payloads = null)
+    {
+        var signingCredentials = GetSigningCredentials();
+        var claims = GetClaims(userEmail, roles, impersonator, payloads);
+        var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
+        var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+        return token;
+    }
+    
     public async Task<string> GenerateToken(ApplicationUser user, string? impersonator = null, 
         ClaimPayload[]? payloads = null)
     {
         var signingCredentials = GetSigningCredentials();
-        var claims = GetClaims(user, impersonator, payloads);
+        var claims = GetClaims(user.Email, user.Roles.Select(a => a.Role.Name).ToArray(), impersonator, payloads);
         var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
         var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
         return token;
