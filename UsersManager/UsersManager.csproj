@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release;Test</Configurations>
@@ -10,7 +10,7 @@
         <Description>Manage users .Net library</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <Version>2.0.0</Version>
-        <PackageVersion>3.0.0</PackageVersion>
+        <PackageVersion>4.0.0</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,7 +25,12 @@
       <PackageReference Include="Google.Cloud.SecretManager.V1" Version="2.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.4" />
       <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.4" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.5" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
     </ItemGroup>
 
     <ItemGroup>
