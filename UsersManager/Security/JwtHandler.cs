@@ -76,24 +76,16 @@ public class JwtHandler
 
     public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(ExternalAuthDto externalAuth)
     {
-        try
+        var settings = new GoogleJsonWebSignature.ValidationSettings
         {
-            var settings = new GoogleJsonWebSignature.ValidationSettings
+            Audience = new List<string>
             {
-                Audience = new List<string>
-                {
-                    _goolgeSettings.GetSection("clientId").Value
-                }
-            };
+                _goolgeSettings.GetSection("clientId").Value
+            }
+        };
 
-            var payload = await GoogleJsonWebSignature.ValidateAsync(externalAuth.IdToken, settings);
-            return payload;
-        }
-        catch (Exception ex)
-        {
-            //log an exception
-            return null;
-        }
+        var payload = await GoogleJsonWebSignature.ValidateAsync(externalAuth.IdToken, settings);
+        return payload;
     }
 
     public async Task<string> GenerateToken(string userEmail, string[] roles, string? impersonator = null, 
