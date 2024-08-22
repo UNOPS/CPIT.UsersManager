@@ -1,10 +1,10 @@
-﻿using System.Dynamic;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using UsersManager.Models;
+using System.Dynamic;
 using UsersManager.DataAccess;
 using UsersManager.Domain;
+using UsersManager.Models;
 using UsersManager.Security;
 
 namespace UsersManager.Helpers;
@@ -24,9 +24,7 @@ public class UsersServices
 
     public async Task<ApplicationUser> Register(UserLoginInfo info, string userEmail)
     {
-        var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
-
-        user = await _userManager.FindByEmailAsync(userEmail);
+        var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey) ?? await _userManager.FindByEmailAsync(userEmail);
 
         if (user == null)
             try
@@ -53,10 +51,10 @@ public class UsersServices
         return user;
     }
 
-    public async Task<AuthResponseDto> Login(UserLoginInfo info, IConfiguration configuration, 
+    public async Task<AuthResponseDto> Login(UserLoginInfo info, IConfiguration configuration, string userEmail = null,
         ClaimPayload[]? payloads = null)
     {
-        var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+        var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey) ?? await _userManager.FindByEmailAsync(userEmail);
 
         //check for the Locked out account
         var appUser = await context.Users
@@ -66,7 +64,7 @@ public class UsersServices
 
         appUser?.SetLastLoginDate();
         await context.SaveChangesAsync();
-        
+
         var permissions = appUser?.GetPermissions(configuration);
         var token = await _jwtHandler.GenerateToken(appUser, null, payloads);
 
