@@ -1,4 +1,5 @@
 ﻿using Google.Api.Gax;
+using Google.Api.Gax.ResourceNames;
 using Google.Cloud.SecretManager.V1;
 using Microsoft.Extensions.Configuration;
 
@@ -6,13 +7,21 @@ namespace UsersManager.Security;
 
 public class SecretManagerConfigurationProvider : ConfigurationProvider
 {
-    public SecretManagerConfigurationProvider()
+    public SecretManagerConfigurationProvider(string? projectId = null)
     {
         try
         {
             Client = SecretManagerServiceClient.Create();
-            var instance = Platform.Instance();
-            ProjectId = instance?.ProjectId;
+            var platform = Platform.Instance();
+            if (platform != null && platform.ProjectId != null)
+            {
+                ProjectId = platform.ProjectId;
+            }
+            else if (projectId != null)
+            {
+                ProjectName project = new ProjectName(projectId);
+                ProjectId = project.ProjectId;
+            }
         }
         catch (Exception e)
         {

@@ -18,8 +18,9 @@ public static class Extensions
         services.AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
         
-        var secretManager = new SecretManagerConfigurationProvider();
         var jwtSettings = configuration.GetSection("JwtSettings");
+        var projectId = jwtSettings.GetSection("ProjectId")?.Value;
+        var secretManager = new SecretManagerConfigurationProvider(projectId);
         var jwtSecurityKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
                              secretManager.GetSecret("JWT_SECRET") ??
                              jwtSettings.GetSection("securityKey").Value;
