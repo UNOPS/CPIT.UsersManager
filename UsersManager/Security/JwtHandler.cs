@@ -24,10 +24,12 @@ public class JwtHandler
 
     public SigningCredentials GetSigningCredentials()
     {
-        var secretManager = new SecretManagerConfigurationProvider();
-
+        var projectId = _jwtSettings.GetSection("ProjectId")?.Value;
+        var secretManager = new SecretManagerConfigurationProvider(projectId);
+        var jwtSecretName = _jwtSettings.GetSection("SecretName").Value;
+        
         var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ??
-                                          secretManager.GetSecret("JWT_SECRET") ??
+                                          secretManager.GetSecret(jwtSecretName ?? "JWT_SECRET") ??
                                          _jwtSettings.GetSection("securityKey").Value);
         var secret = new SymmetricSecurityKey(key);
         return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
