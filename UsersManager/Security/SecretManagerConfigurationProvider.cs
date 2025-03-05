@@ -36,7 +36,7 @@ public class SecretManagerConfigurationProvider : ConfigurationProvider
     {
         if (ProjectId == null) return null;
         // Build the resource name.
-        var secretVersionName = new SecretVersionName(ProjectId, secretId, "1");
+        var secretVersionName = new SecretVersionName(ProjectId, secretId, "latest");
 
         try
         {

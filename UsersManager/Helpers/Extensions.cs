@@ -21,8 +21,10 @@ public static class Extensions
         var jwtSettings = configuration.GetSection("JwtSettings");
         var projectId = jwtSettings.GetSection("ProjectId")?.Value;
         var secretManager = new SecretManagerConfigurationProvider(projectId);
+        var jwtSecretName = jwtSettings.GetSection("SecretName").Value;
+        
         var jwtSecurityKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
-                             secretManager.GetSecret("JWT_SECRET") ??
+                             secretManager.GetSecret(jwtSecretName ?? "JWT_SECRET") ??
                              jwtSettings.GetSection("securityKey").Value;
 
         services.AddAuthentication(opt =>
