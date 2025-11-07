@@ -20,12 +20,28 @@ public static class Extensions
         
         var jwtSettings = configuration.GetSection("JwtSettings");
         var projectId = jwtSettings.GetSection("ProjectId")?.Value;
-        var secretManager = new SecretManagerConfigurationProvider(projectId);
         var jwtSecretName = jwtSettings.GetSection("SecretName").Value;
         
-        var jwtSecurityKey = Environment.GetEnvironmentVariable("JWT_SECRET") ??
-                             secretManager.GetSecret(jwtSecretName ?? "JWT_SECRET") ??
-                             jwtSettings.GetSection("securityKey").Value;
+        string? jwtSecurityKey = null;
+        
+        if (!string.IsNullOrEmpty(jwtSecretName))
+        {
+            var secretManager = new SecretManagerConfigurationProvider(projectId);
+            jwtSecurityKey = secretManager.GetSecret(jwtSecretName);
+        }
+        
+        jwtSecurityKey ??= Environment.GetEnvironmentVariable("JWT_SECRET") ??
+                           jwtSettings.GetSection("securityKey").Value;
+        
+        if (string.IsNullOrEmpty(jwtSecurityKey))
+        {
+            var errorMessage = $"[UsersManager] Failed to retrieve JWT security key. " +
+                             $"Attempted: Google Secret Manager ({jwtSecretName}), Environment Variable (JWT_SECRET), appsettings (securityKey). " +
+                             $"Please configure at least one source.";
+            
+            Console.Error.WriteLine(errorMessage);
+            throw new InvalidOperationException(errorMessage);
+        }
 
         services.AddAuthentication(opt =>
         {

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using UsersManager.Domain;
 using UsersManager.Models;
@@ -14,10 +15,12 @@ public class JwtHandler
     private readonly IConfiguration _configuration;
     private readonly IConfigurationSection _goolgeSettings;
     private readonly IConfigurationSection _jwtSettings;
+    private readonly ILogger<JwtHandler> _logger;
 
-    public JwtHandler(IConfiguration configuration)
+    public JwtHandler(IConfiguration configuration, ILogger<JwtHandler> logger)
     {
         _configuration = configuration;
+        _logger = logger;
         _jwtSettings = _configuration.GetSection("JwtSettings");
         _goolgeSettings = _configuration.GetSection("GoogleAuthSettings");
     }
@@ -25,12 +28,30 @@ public class JwtHandler
     public SigningCredentials GetSigningCredentials()
     {
         var projectId = _jwtSettings.GetSection("ProjectId")?.Value;
-        var secretManager = new SecretManagerConfigurationProvider(projectId);
         var jwtSecretName = _jwtSettings.GetSection("SecretName").Value;
         
-        var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET") ??
-                                          secretManager.GetSecret(jwtSecretName ?? "JWT_SECRET") ??
-                                         _jwtSettings.GetSection("securityKey").Value);
+        string? jwtSecurityKey = null;
+        
+        if (!string.IsNullOrEmpty(jwtSecretName))
+        {
+            var secretManager = new SecretManagerConfigurationProvider(projectId);
+            jwtSecurityKey = secretManager.GetSecret(jwtSecretName);
+        }
+        
+        jwtSecurityKey ??= Environment.GetEnvironmentVariable("JWT_SECRET") ??
+                           _jwtSettings.GetSection("securityKey").Value;
+        
+        if (string.IsNullOrEmpty(jwtSecurityKey))
+        {
+            var errorMessage = $"Failed to retrieve JWT security key. " +
+                             $"Attempted: Google Secret Manager ({jwtSecretName}), Environment Variable (JWT_SECRET), appsettings (securityKey). " +
+                             $"Please configure at least one source.";
+            
+            _logger.LogCritical(errorMessage);
+            throw new InvalidOperationException(errorMessage);
+        }
+        
+        var key = Encoding.UTF8.GetBytes(jwtSecurityKey);
         var secret = new SymmetricSecurityKey(key);
         return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
     }
