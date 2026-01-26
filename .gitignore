@@ -2,3 +2,7 @@
 .vs/
 UsersManager/bin/
 UsersManager/obj/
+sample/**/bin/
+sample/**/obj/
+sample/**/appsettings.*.json
+sample/**/Migrations/
