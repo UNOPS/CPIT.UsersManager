@@ -17,7 +17,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     {
         base.OnModelCreating(builder);
 
-        builder.HasDefaultSchema("public");
         builder.Entity<ApplicationUser>().ToTable("AspNetUsers");
         builder.Entity<ApplicationRole>().ToTable("AspNetRoles");
         builder.Entity<ApplicationUserClaim>().ToTable("AspNetUserClaims");
