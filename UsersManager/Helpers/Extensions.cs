@@ -110,7 +110,7 @@ public static class Extensions
                 ValidIssuer = jwtSettings.GetSection("validIssuer").Value,
                 ValidAudience = jwtSettings.GetSection("validAudience").Value,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecurityKey)),
-                ClockSkew = TimeSpan.FromHours(8)
+                ClockSkew = TimeSpan.FromMinutes(jwtSettings.GetValue<double?>("clockSkewInMinutes") ?? 5)
             };
         });
         services.AddScoped<JwtHandler>();

@@ -42,6 +42,8 @@ You should have a "JwtSettings" section in appsettings.json file, which contains
 - validIssuer
 - validAudience
 - expiryInMinutes
+- clockSkewInMinutes (optional, default 5): how long after its expiry a token is still accepted. Versions before
+  4.4.0 hard-coded eight hours, which kept every token usable for twice its `expiryInMinutes`.
 Those settings can be also stored in application environment or Google secret manager, the library will be able to read them.
 You need also to add "GoogleAuthSettings" section in appsettings.json file, which contains three main configurations:
 - clientId
