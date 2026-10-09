@@ -86,13 +86,16 @@ public class JwtHandler
         return claims;
     }
 
-    public JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
+    public JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims,
+        TimeSpan? lifetime = null)
     {
         var tokenOptions = new JwtSecurityToken(
             _jwtSettings.GetSection("validIssuer").Value,
             _jwtSettings.GetSection("validAudience").Value,
             claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(_jwtSettings.GetSection("expiryInMinutes").Value)),
+            expires: DateTime.UtcNow.Add(lifetime ??
+                                         TimeSpan.FromMinutes(
+                                             Convert.ToDouble(_jwtSettings.GetSection("expiryInMinutes").Value))),
             signingCredentials: signingCredentials);
         return tokenOptions;
     }
@@ -112,21 +115,21 @@ public class JwtHandler
     }
 
     public async Task<string> GenerateToken(string userEmail, string[] roles, string? impersonator = null, 
-        ClaimPayload[]? payloads = null)
+        ClaimPayload[]? payloads = null, TimeSpan? lifetime = null)
     {
         var signingCredentials = GetSigningCredentials();
         var claims = GetClaims(userEmail, roles, impersonator, payloads);
-        var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
+        var tokenOptions = GenerateTokenOptions(signingCredentials, claims, lifetime);
         var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
         return token;
     }
     
     public async Task<string> GenerateToken(ApplicationUser user, string? impersonator = null, 
-        ClaimPayload[]? payloads = null)
+        ClaimPayload[]? payloads = null, TimeSpan? lifetime = null)
     {
         var signingCredentials = GetSigningCredentials();
         var claims = GetClaims(user.Email, user.Roles.Select(a => a.Role.Name).ToArray(), impersonator, payloads);
-        var tokenOptions = GenerateTokenOptions(signingCredentials, claims);
+        var tokenOptions = GenerateTokenOptions(signingCredentials, claims, lifetime);
         var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
         return token;
     }

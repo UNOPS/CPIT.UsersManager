@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using UsersManager.DataAccess;
+using UsersManager.Helpers;
 
 namespace UsersManager.Security;
 
@@ -27,15 +28,19 @@ public class RolesInDbAuthorizationHandler : AuthorizationHandler<RolesAuthoriza
             return;
         }
 
+        var userId = context.User.Identity?.Name;
+
         bool found;
         if (requirement.AllowedRoles.Any() == false)
         {
-            // it means any logged in user is allowed to access the resource
-            found = true;
+            // it means any logged in, active user is allowed to access the resource
+            found = await _dbContext.Users
+                .Where(p => p.Email == userId)
+                .Active()
+                .AnyAsync();
         }
         else
         {
-            var userId = context.User.Identity?.Name;
             var roles = requirement.AllowedRoles;
             var roleIds = await _dbContext.Roles
                 .Where(p => roles.Contains(p.Name))
@@ -43,7 +48,7 @@ public class RolesInDbAuthorizationHandler : AuthorizationHandler<RolesAuthoriza
                 .ToListAsync();
 
             found = await _dbContext.UserRoles
-                .Where(p => roleIds.Contains(p.RoleId) && p.User.Email == userId)
+                .Where(p => roleIds.Contains(p.RoleId) && p.User.Email == userId && p.User.DateActivated != null)
                 .AnyAsync();
         }
 
