@@ -2,3 +2,4 @@
 .vs/
 UsersManager/bin/
 UsersManager/obj/
+*.nupkg
