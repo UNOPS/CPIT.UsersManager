@@ -16,9 +16,20 @@ jobs:
       id-token: write # required to request the OIDC token for nuget.org
 
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to commit SHAs: a tag can be moved to other code, and this job can publish the package.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0 # the whole history, so the next step can tell whether the tag is on main
 
-      - uses: actions/setup-dotnet@v4
+      # Anyone who can push a tag can otherwise publish a commit that was never reviewed or merged.
+      - name: Check tag is on main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not on main"
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: '8.0.x'
 
@@ -36,7 +47,7 @@ jobs:
 
       - name: NuGet login
         id: login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
         with:
           user: ${{ secrets.NUGET_USER }}
 
