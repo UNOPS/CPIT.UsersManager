@@ -31,6 +31,8 @@
       </PackageReference>
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
+      <!-- Pomelo 8.0.2 pulls MySqlConnector 2.3.5, which sends the password before the TLS certificate is verified (GHSA-473q-m89c-ghf8). -->
+      <PackageReference Include="MySqlConnector" Version="2.6.2" />
     </ItemGroup>
 
     <ItemGroup>
