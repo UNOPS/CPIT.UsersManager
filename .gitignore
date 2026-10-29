@@ -2,4 +2,6 @@
 .vs/
 UsersManager/bin/
 UsersManager/obj/
+UsersManager.Tests/bin/
+UsersManager.Tests/obj/
 *.nupkg

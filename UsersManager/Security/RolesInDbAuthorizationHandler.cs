@@ -1,56 +1,48 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using UsersManager.DataAccess;
 using UsersManager.Helpers;
 
 namespace UsersManager.Security;
 
+/// <summary>
+///     Checks a role requirement against the database rather than the token, so that a role removed, or an account
+///     deactivated or locked out, since the token was minted is refused on the next request. It runs for the permission
+///     policies and for <c>[Authorize(Roles = ...)]</c>; the latter does not get the default policy, so this is the only
+///     database check such an endpoint has.
+/// </summary>
 public class RolesInDbAuthorizationHandler : AuthorizationHandler<RolesAuthorizationRequirement>
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly IConfiguration configuration;
 
-
-    public RolesInDbAuthorizationHandler(ApplicationDbContext identityTenantDbContext, IConfiguration configuration)
+    public RolesInDbAuthorizationHandler(ApplicationDbContext identityTenantDbContext)
     {
         _dbContext = identityTenantDbContext;
-        this.configuration = configuration;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
         RolesAuthorizationRequirement requirement)
     {
-        if (context.User.Identity is {IsAuthenticated: false})
+        if (context.User.Identity is not { IsAuthenticated: true })
         {
             context.Fail();
             return;
         }
 
-        var userId = context.User.Identity?.Name;
+        var email = context.User.Identity.Name;
 
-        bool found;
-        if (requirement.AllowedRoles.Any() == false)
-        {
-            // it means any logged in, active user is allowed to access the resource
-            found = await _dbContext.Users
-                .Where(p => p.Email == userId)
-                .Active()
-                .AnyAsync();
-        }
-        else
-        {
-            var roles = requirement.AllowedRoles;
-            var roleIds = await _dbContext.Roles
-                .Where(p => roles.Contains(p.Name))
-                .Select(p => p.Id)
-                .ToListAsync();
+        // RolesAuthorizationRequirement refuses to be built without roles, so there is always at least one.
+        var roles = requirement.AllowedRoles;
 
-            found = await _dbContext.UserRoles
-                .Where(p => roleIds.Contains(p.RoleId) && p.User.Email == userId && p.User.DateActivated != null)
-                .AnyAsync();
-        }
+        // The account must hold one of the roles and still be allowed to sign in. Lockout is checked here too: the
+        // claims transformation strips a locked-out account's roles, but this handler would otherwise re-grant them.
+        var found = await _dbContext.Users
+            .Where(u => u.Email == email)
+            .Active()
+            .NotLockedOut()
+            .Where(u => u.Roles.Any(r => roles.Contains(r.Role.Name)))
+            .AnyAsync();
 
         if (found)
             context.Succeed(requirement);
